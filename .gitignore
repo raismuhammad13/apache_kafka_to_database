@@ -1,2 +1,4 @@
 /myenv
-.evn
+/.evn
+/producer.log
+/consumer.log

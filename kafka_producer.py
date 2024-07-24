@@ -6,6 +6,13 @@ import uuid
 import random
 from datetime import timedelta, datetime
 from dotenv import find_dotenv, load_dotenv
+import logging
+
+
+# Configure logging###################  
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 
 dotenv_path = find_dotenv()
 load_dotenv(dotenv_path)
@@ -140,6 +147,7 @@ def producer_data_to_kafka_topic(producer, topic, data):
         topic,
         data
     )
+    logger.info(f"Data sent to topic {topic}")
 
 def simulate_journey(producer, device_id):
     while True:
@@ -152,7 +160,7 @@ def simulate_journey(producer, device_id):
         # Checking if the vehicle reached to its destination or not.
         if (vehicle_data["location"][0] >= BIRMINGHAM_COORDINATES["latitude"]
                 and vehicle_data["location"][1] <= BIRMINGHAM_COORDINATES["longitude"]):
-                print("Vehicle reached Birminghm. Simulation ending.....")
+                logger.info("Vehicle reached Birmingham. Simulation ending.....")
                 break
         
         # Producing the data into kafka topic
@@ -163,28 +171,23 @@ def simulate_journey(producer, device_id):
         producer_data_to_kafka_topic(producer, EMERGENCY_TOPIC, emergency_incident_data)
 
 
-        print("vehicle_data", vehicle_data)
-        print()
-        print("gps_data", gps_data)
-        print()
-        print("traffic_camera_data", traffic_camera_data)
-        print()
-        print("weather_data", weather_data)
-        print()
-        print("emergency_incident_data", emergency_incident_data)
-        print()
+        # logger.info(f"vehicle_data: {vehicle_data}")
+        # logger.info(f"gps_data: {gps_data}")
+        # logger.info(f"traffic_camera_data: {traffic_camera_data}")
+        # logger.info(f"weather_data: {weather_data}")
+        # logger.info(f"emergency_incident_data: {emergency_incident_data}")
         
-        time.sleep(2)
+        time.sleep(4)
 
 if __name__ == "__main__":
     # Configuring the kafka producer
     producer = KafkaProducer(
-        bootstrap_servers=['127.0.0.1:9092'],
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVER, #['127.0.0.1:9092'],
         value_serializer=json_serializer
     )
     try:
         simulate_journey(producer, "Vehicle_123")
     except KeyboardInterrupt:
-        print("Simulation ended by the user.")
+        logger.info("Simulation ended by the user.")
     except Exception as e:
-        print(f"Unexpected error occured {e}")
+        logger.error(f"Unexpected error occurred: {e}")
